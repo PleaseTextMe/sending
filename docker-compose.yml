@@ -1,18 +1,16 @@
-version: '3.8'
-
 services:
-  auth_app:
+  sending_app:
     build: .
-    container_name: please_text_me_auth
+    container_name: please_text_me_sending
     ports:
-      - "8000:8000"
+      - "8001:8001"
     environment:
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=please_text_me_postgres_sending
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=please_text_me_db
+      - POSTGRES_DB=please_text_me_messages_db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-secret}
-      - REDIS_HOST=redis
+      - REDIS_HOST=please_text_me_redis_sending
       - REDIS_PORT=6379
       - REDIS_DB=0
     depends_on:
@@ -21,30 +19,38 @@ services:
       redis:
         condition: service_started
     restart: unless-stopped
+    networks:
+      - default
+      - auth_default
 
   redis:
     image: redis:7-alpine
-    container_name: please_text_me_redis
+    container_name: please_text_me_redis_sending
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
-      - redis_data:/data
+      - redis_data_sending:/data
     restart: unless-stopped
     command: redis-server --appendonly yes
 
   postgres:
     image: postgres:15-alpine
-    container_name: please_text_me_postgres
+    container_name: please_text_me_postgres_sending
     ports:
-      - "5433:5432"
+      - "5434:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
-      POSTGRES_DB: please_text_me_db
+      POSTGRES_DB: please_text_me_messages_db
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_sending:/var/lib/postgresql/data
     restart: unless-stopped
 
 volumes:
-  redis_data:
-  postgres_data:
+  redis_data_sending:
+  postgres_data_sending:
+
+networks:
+  default:
+  auth_default:
+    external: true

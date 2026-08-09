@@ -8,6 +8,7 @@ class SendMessageDTO(BaseModel):
 class MessageDTO(BaseModel):
     id: str
     sender_login: str
+    recipient_login: str
     timestamp: int
     ciphertext: str
     nonce: str

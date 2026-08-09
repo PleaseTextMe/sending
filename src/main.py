@@ -29,6 +29,15 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
         exception_handlers=exception_handlers
     )
+    
+    fastapi_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     fastapi_app.include_router(router, prefix="/api")
     container = make_async_container(Container())
     setup_dishka(container=container, app=fastapi_app)
@@ -36,15 +45,6 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 if __name__ == "__main__":
     app()

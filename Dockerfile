@@ -20,7 +20,7 @@ COPY . .
 RUN mkdir -p /app/logs
 
 # Expose the application port
-EXPOSE 8000
+EXPOSE 8001
 
 # Use a shell script to run migrations then start the app
-CMD ["sh", "-c", "PYTHONPATH=. alembic upgrade head && PYTHONPATH=. uvicorn src.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "PYTHONPATH=. alembic upgrade head && PYTHONPATH=. uvicorn src.main:app --host 0.0.0.0 --port 8001"]

@@ -1,32 +1,19 @@
 from collections.abc import AsyncIterable
 
 from dishka import Provider, Scope, provide
-from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.config import settings
 from src.infrastructure.db import postgres
-from src.infrastructure.uow import DatabaseUnitOfWork
+from src.infrastructure.uow import SQLAlchemyUnitOfWork
 from src.services.interfaces.uow import IUnitOfWork
-from src.services.session import ISessionService, SessionService
-from src.services.user import IUserService, UserService
-from src.services.verify import IVerifyService, VerifyService
-
-# from src.infrastructure.messaging import producer
+from src.services.message import MessageService
+from src.services.ws_manager import ConnectionManager
 
 
 class Container(Provider):
-    # @provide(scope=Scope.APP)
-    # async def provide_rabbitmq_producer(self) -> IProducer:
-    #     if producer.producer is None:
-    #         raise RuntimeError("RabbitMQ producer is not initialized")
-    #     return producer.producer
-
     @provide(scope=Scope.APP)
-    async def provide_redis(self) -> AsyncIterable[Redis]:
-        client = Redis.from_url(settings.redis.url)
-        yield client
-        await client.aclose()
+    def provide_ws_manager(self) -> ConnectionManager:
+        return ConnectionManager()
 
     @provide(scope=Scope.REQUEST)
     async def provide_session(self) -> AsyncIterable[AsyncSession]:
@@ -36,18 +23,9 @@ class Container(Provider):
             yield session
 
     @provide(scope=Scope.REQUEST)
-    # async def provide_uow(self, session: AsyncSession, producer: IProducer) -> IUnitOfWork:
-    async def provide_uow(self, session: AsyncSession, redis: Redis) -> IUnitOfWork:
-        return DatabaseUnitOfWork(session, redis)
+    async def provide_uow(self, session: AsyncSession) -> IUnitOfWork:
+        return SQLAlchemyUnitOfWork(session)
 
     @provide(scope=Scope.REQUEST)
-    async def provide_session_service(self, uow: IUnitOfWork) -> ISessionService:
-        return SessionService(uow)
-
-    @provide(scope=Scope.REQUEST)
-    async def provide_user_service(self, uow: IUnitOfWork) -> IUserService:
-        return UserService(uow)
-
-    @provide(scope=Scope.REQUEST)
-    async def provide_verify_service(self, uow: IUnitOfWork) -> IVerifyService:
-        return VerifyService(uow)
+    async def provide_message_service(self, ws_manager: ConnectionManager) -> MessageService:
+        return MessageService(ws_manager=ws_manager)
