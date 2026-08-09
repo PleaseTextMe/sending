@@ -5,7 +5,13 @@ from src.domain.entities.message import Message
 from src.services.interfaces.uow import IUnitOfWork
 
 
+from src.services.ws_manager import ConnectionManager
+
+
 class MessageService:
+    def __init__(self, ws_manager: ConnectionManager):
+        self.ws_manager = ws_manager
+
     async def send_message(
         self, uow: IUnitOfWork, sender_login: str, dto: SendMessageDTO
     ) -> MessageDTO:
