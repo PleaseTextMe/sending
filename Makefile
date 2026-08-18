@@ -2,9 +2,9 @@
 
 # Default values
 DC = docker compose
-APP_CONTAINER = please_text_me_auth
-DB_CONTAINER = please_text_me_postgres
-REDIS_CONTAINER = please_text_me_redis
+APP_CONTAINER = please_text_me_sending
+DB_CONTAINER = please_text_me_postgres_sending
+REDIS_CONTAINER = please_text_me_redis_sending
 
 help:
 	@echo "Available commands:"
@@ -34,7 +34,7 @@ shell:
 	docker exec -it $(APP_CONTAINER) /bin/sh
 
 db-shell:
-	docker exec -it $(DB_CONTAINER) psql -U postgres -d please_text_me_db
+	docker exec -it $(DB_CONTAINER) psql -U postgres -d please_text_me_messages_db
 
 redis-shell:
 	docker exec -it $(REDIS_CONTAINER) redis-cli
