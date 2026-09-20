@@ -4,6 +4,7 @@ from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.api.v1.router import router
 from src.infrastructure.container import Container
@@ -41,6 +42,7 @@ def create_app() -> FastAPI:
     fastapi_app.include_router(router, prefix="/api")
     container = make_async_container(Container())
     setup_dishka(container=container, app=fastapi_app)
+    Instrumentator().instrument(fastapi_app).expose(fastapi_app)
     return fastapi_app
 
 

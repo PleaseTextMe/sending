@@ -1,7 +1,10 @@
 from collections.abc import Sequence
+import json
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+
+from src.core.metrics import TYPING_EVENTS_TOTAL
 
 from src.api.v1.depends import get_current_user_login, get_ws_user_login
 from src.domain.dtos.message import MessageDTO, SendMessageDTO
@@ -28,10 +31,21 @@ async def websocket_endpoint(
     await ws_manager.connect(websocket, login)
     try:
         while True:
-            # We just keep the connection alive
-            await websocket.receive_text()
+            text = await websocket.receive_text()
+            try:
+                data = json.loads(text)
+                if data.get("type") == "typing":
+                    TYPING_EVENTS_TOTAL.inc()
+                    recipient = data.get("recipient_login")
+                    if recipient:
+                        await ws_manager.send_personal_message(
+                            {"type": "typing", "sender": login}, 
+                            recipient
+                        )
+            except json.JSONDecodeError:
+                pass
     except WebSocketDisconnect:
-        ws_manager.disconnect(websocket, login)
+        await ws_manager.disconnect(websocket, login)
 
 
 @router.post("/", response_model=MessageDTO)
